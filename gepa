@@ -1,0 +1,193 @@
+#!/bin/bash
+# (ge)ntoo (pa)ckages - A generic, package tasks script for Gentoo Linux
+
+# Required programs
+req_prgs=(emerge euse sudo)
+for prog in ${req_prgs[@]}; do
+  if ! hash "$prog" 2>&- ; then
+    echo >&2 ""${0##*/}": requires program: "$prog""
+    error=y ;fi ; done
+[ "$error" = y ] && exit 1
+
+# Underlining
+tu=$(tput sgr 0 1) # underline
+te=$(tput sgr0)    # end
+
+help_prnt () {
+  echo ""${0##*/}" [option] [*package] - package tasks wrapper script
+  -b, --binpkg  - binary-archived package create from a pre-compiled inst.
+  -c, --cnfdiff - configuration differentiate. Merge old and new configurations.
+  -d, --diskcln - disk clean.  rm archives of unused pkg srccode not in tree
+  -i, --install - install package
+  -i:[b,d,e]    - install: "$tu"b"$te"inary, "$tu"d"$te"ependency, binary as d"$tu"ependency
+  -i:[g,r,s]    - install: "$tu"g"$te"et-source only, "$tu"r"$te"esume, resume and "$tu"skip-first
+  -i:[u,t,v]    - install: "$tu"u"$te"pgrade, "$tu"t"$te"otal-upgrade (w/ builddeps), re"$tu"v"$te"dep-rebld
+  -e:[a,b,l]    - edit/view: m"$tu"a"$te"ke.conf, e"$tu"b"$te"uild, e"$tu"l"$te"og
+  -e:[k,m,n,s]  - edit/view: package.[accept_"$tu"k"$te"eywords,"$tu"m"$te"ask,u"$tu"n"$te"mask,u"$tu"s"$te"e]
+  -f:[e,i,r]    - flag: use flag "$tu"e"$te"xclude, "$tu"i"$te"nclude, "$tu"r"$te"emove global|cat-name/pkg
+  -f:[n,p,q]    - flag: use flag i"$tu"n"$te"fo, "$tu"p"$te"ackage nfo of flags, "$tu"q"$te"uery pkgs w/ flag
+  -g,:[r]       - graph dependencies, "$tu"r"$te"everse dependencies
+  -h:a          - help "$tu"a"$te"dditional
+  -l, --list    - list files installed by a package
+  -o, --owns    - owning package of a file
+  -p:[h,m,n]    - "$tu"h"$te"old a pkg - <=cat/pkg-version>, "$tu"m"$te"ask pkg, u"$tu"n"$te"mask
+  -q, --query   - query for an installed package
+  -r, --remove  - remove a package
+  -r,:[d,f]     - remove: "$tu"d"$te"epclean orphans, "$tu"f"$te"orce remove pkg (ignores deps)
+  -s,:[d]       - search for a package, "$tu"d"$te"escription with search
+  -y, --sync    - sync package (porage tree) database"; }
+
+help_addn () {
+  echo ""${0##*/}" - Help additional
+  Notes:
+    Only one option can be used at a time.
+    For install and remove options, a capitalized -I or -R will remove --ask.
+    Long options are available for all options, look at the script.
+  Post-update part 1, kernel building:
+    eselect kernel [list,set] && cd /usr/src/linux    # select kernel source
+    cp /boot/config-<kern-ver> /usr/src/linux/.config # cp prev. config
+    make oldconfig && make menuconfig                 # convert oldconf, newopts
+    make dep ; make clean ; make && make modules_install
+    cp vmlinux /boot/"$(readlink /usr/src/linux | sed 's/^linux/vmlinux/')" 
+    cp .config /boot/"$(readlink /usr/src/linux | sed 's/^linux/config/')"
+    emerge --ask @module-rebuild             # rebuild external kern. modules
+    eclean-kernel -n 2                       # keep two newest kernels
+  Post-update part 2, other details:
+    emerge --depclean
+    revdep-rebuild                           # (i.e. "${0##*/}" -i:v)
+    perl-cleaner --all && python-updater     # if py/perl updtd & not total updt
+    emerge -1a @x11-module-rebuild           # if xorgsrv updtd & not total updt
+    eclean distfiles                         # (i.e. "${0##*/}" -d)
+  Compile details:
+    genlop -c                                # compiling package and time
+    emerge --pretend ... | genlop --pretend  # estimate compile time
+    genlop -l | tail -n 10                   # list last 10 compiled packages
+  Other:
+    ebuild xxx.ebuild manifest clean merge   # edit and install from an ebuild
+    gcc-config no.                           # set default gcc (-l lists)" ; }
+
+# Parameter existence check
+param_tst () {
+  if [ -n "$@" ]; then 
+    return 0
+  else
+    echo "no input specified"; exit 1; fi; }
+
+# Options
+case $1 in
+  -b | --binpkg  )
+    shift; param_tst && sudo quickpkg --include-config=y "$@" ;;
+  -c | --cnfdiff )
+    sudo dispatch-conf ;;
+  -d | --diskcln )
+    sudo eclean distfiles ;;
+  -i | --install )
+    shift; param_tst && sudo emerge --ask "$@" ;;
+  -I | --Install )
+    shift; param_tst && sudo emerge "$@" ;;
+  -i:b | --instbin )
+    shift; param_tst && sudo emerge --ask --usepkgonly "$@" ;;
+  -I:b | --Instbin )
+    shift; param_tst && sudo emerge --usepkg "$@" ;;
+  -i:d | --instdep )
+    shift; param_tst && sudo emerge --ask --oneshot "$@" ;;
+  -I:d | --Instdep )
+    shift; param_tst && sudo emerge --oneshot "$@" ;;
+  -i:e | --instbep )
+    shift; param_tst && sudo emerge --ask --usepkg --oneshot "$@" ;;
+  -I:e | --Instbep )
+    shift; param_tst && sudo emerge --usepkg --oneshot "$@" ;;
+  -i:g | --instget )
+    shift; param_tst && sudo emerge --fetchonly "$@" ;;
+  -i:r | --instres )
+    sudo emerge --resume --ask ;;
+  -I:r | --Instres )
+    sudo emerge --resume ;;
+  -i:s | --instskp )
+    sudo emerge --resume --skipfirst --ask ;;
+  -I:s | --Instskp )
+    sudo emerge --resume --skipfirst ;;
+  -i:u | --instup  )
+    sudo emerge --update --newuse --deep --keep-going --ask @world ;;
+  -I:u | --Instup  )
+    sudo emerge --update --newuse --deep --keep-going @world ;;
+  -i:t | --insttot )
+    sudo emerge --update --newuse --deep --with-bdeps=y --keep-going -ask \
+      @world ;;
+  -I:t | --Insttot )
+    sudo emerge --update --newuse --deep --with-bdeps=y --keep-going @world ;;
+  -i:v | --instrev )
+    sudo revdep-rebuild
+  -e:a | --editmak )
+    sudo $EDITOR /etc/portage/make.conf ;;
+  -e:b | --editbld )
+    shift; param_tst && equery which "$@" ;;
+  -e:l | --editlog )
+    $EDITOR /var/log/portage/elog/summary.log ;;
+  -e:k | --editkey )
+    sudo $EDITOR /etc/portage/package.accept_keywords ;;
+  -e:m | --editmsk )
+    sudo $EDITOR /etc/portage/package.mask ;;
+  -e:u | --editums )
+    sudo $EDITOR /etc/portage/package.unmask ;;
+  -e:s | --edituse )
+    sudo $EDITOR /etc/portage/package.use ;;
+  -g   | --graphdp )
+    shift; param_tst && equery depends "$@" ;;
+  -g:r | --graphrd )
+    shift; param_tst && equery depgraph "$@" ;;
+  -h:a | --helpadd )
+    help_addn ;;
+  -l   | --list    )
+    shift; param_tst && equery files "$@" ;;
+  -o   | --owns    )
+    shift; param_tst && equery belongs "$@" ;;
+  -p:h | --pkghold )
+    shift; param_tst
+    for p in "$@"; do
+      echo "$p" | sudo tee -a /etc/portage/package.mask
+      ## | sudo tee -a /etc/portage/package.unmask
+    done ;;
+  -p:m | --pkgmask )
+    shift; param_tst
+    for p in "$@"; do
+      echo "$p" | sudo tee -a /etc/portage/package.mask
+    done ;;
+  -p:n | --pkgumsk )
+    shift; param_tst
+    for p in "$@"; do
+      echo "$p" | sudo tee -a /etc/portage/package.unmask
+    done ;;
+  -q   | --query   )
+    shift; param_tst && eix -Is "$@" ;;
+  -r   | --remove  )
+    shift; param_tst && sudo emerge --ask --unmerge "$@" ;;
+  -R   | --Remove  )
+    shift; param_tst && sudo emerge --unmerge "$@" ;;
+  -r:d | --depclean )
+    sudo emerge --ask --depclean ;;
+  -R:d | --Depclean )
+    sudo emerge --depclean ;;
+  -s   | --search  )
+    shift; param_tst && eix -s "$@" ;;
+  -s:d | --searchds )
+    shift; param_tst && eix "$@" ;;
+  -y   | --sync    )
+    sudo eix-sync ;;
+esac
+
+# Todo?/Notes
+#( ) -f:[e,i,r]  - flag: use flag exclude, include, remove global|cat-name/pkg
+#( ) Add tests for package category, name, and version (-f,-p)
+#(?) euse -[D,E} for flags?
+#( ) -p:h parse =cat-name/pkgname-version to cat-name/pkgname (can eix do?)
+#( ) -q   define eix options: -Is; "$@" to "$1"?
+#( ) -r:f unadded: removebyforce necessary, emerge "$@"???; helpremains
+#( ) -h:[a,b] - help additional: part a, and part b
+#( ) -i before e ...
+#( ) Block add?
+#    B | Block )         shift
+#                        sudo quickpkg $1
+#                        sudo emerge --unmerge $1
+#                        sudo emerge $2
+#                        sudo emerge --usepkgonly --nodeps $1
