@@ -1,6 +1,6 @@
 ### Name
 
-gepa - (ge)ntoo (pa)ckages - A generic, package tasks script for Gentoo Linux
+(ge)ntoo (pa)ckages - A generic, package tasks script for Gentoo Linux
 
 ### Description
 
