@@ -1,6 +1,6 @@
 ### Description
 
-`gepa` is a wrapper script encompassing many common package manager-related tasks - the goal being to aggragate together and help remember how to implement those tasks.
+`gepa` is a wrapper script encompassing many common package manager-related tasks - the purpose intended is to help the user remember how to implement those tasks.
 
 ### ToDo
 
