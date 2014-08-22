@@ -1,10 +1,6 @@
-### Name
-
-(ge)ntoo (pa)ckages - A generic, package tasks script for Gentoo Linux
-
 ### Description
 
-A generic wrapper script for common Gentoo Linux package tasks.
+`gepa` is a wrapper script encompassing many common package manager-related tasks - the goal being to aggragate together and help remember how to implement those tasks.
 
 ### ToDo
 
