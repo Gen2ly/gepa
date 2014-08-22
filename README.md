@@ -1,10 +1,33 @@
-### Name
-
-(ge)ntoo (pa)ckages - A generic, package tasks script for Gentoo Linux
-
 ### Description
 
 A generic wrapper script for common Gentoo Linux package tasks.
+
+### Usage
+
+```bash
+gepa [option] [*package] - package tasks wrapper script
+  -b, --binpkg  - binary-archived package create from a pre-compiled inst.
+  -c, --cnfdiff - configuration differentiate. Merge old and new configurations.
+  -d, --diskcln - disk clean.  rm archives of unused pkg srccode not in tree
+  -i, --install - install package
+  -i:[b,d,e]    - install: binary, dependency, binary as dependency
+  -i:[g,r,s]    - install: get-source only, resume, resume and skip-first
+  -i:[u,t,v]    - install: upgrade, total-upgrade (w/ builddeps), revdep-rebld
+  -e:[a,b,l]    - edit/view: make.conf, ebuild, elog
+  -e:[k,m,n,s]  - edit/view: package.[accept_keywords,mask,unmask,use]
+  -f:[e,i,r]    - flag: use flag exclude, include, remove global|cat-name/pkg
+  -f:[n,p,q]    - flag: use flag info, package nfo of flags, query pkgs w/ flag
+  -g,:[r]       - graph dependencies, reverse dependencies
+  -h:a          - help additional
+  -l, --list    - list files installed by a package
+  -o, --owns    - owning package of a file
+  -p:[h,m,n]    - hold a pkg - <=cat/pkg-version>, mask pkg, unmask
+  -q, --query   - query for an installed package
+  -r, --remove  - remove a package
+  -r,:[d,f]     - remove: depclean orphans, force remove pkg (ignores deps)
+  -s,:[d]       - search for a package, description with search
+  -y, --sync    - sync package (porage tree) database
+```
 
 ### ToDo
 
@@ -25,4 +48,3 @@ B | Block )         shift
                     sudo emerge $2
                     sudo emerge --usepkgonly --nodeps $1
 ```
-

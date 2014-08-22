@@ -2,12 +2,12 @@
 # (ge)ntoo (pa)ckages - A generic, package tasks script for Gentoo Linux
 
 # Required programs
-req_prgs=(emerge euse sudo)
-for prog in ${req_prgs[@]}; do
-  if ! hash "$prog" 2>&- ; then
-    echo >&2 ""${0##*/}": requires program: "$prog""
-    error=y ;fi ; done
-[ "$error" = y ] && exit 1
+#req_prgs=(emerge euse sudo)
+#for prog in ${req_prgs[@]}; do
+#  if ! hash "$prog" 2>&- ; then
+#    echo >&2 ""${0##*/}": requires program: "$prog""
+#    error=y ;fi ; done
+#[ "$error" = y ] && exit 1
 
 # Underlining
 tu=$(tput sgr 0 1) # underline
@@ -19,8 +19,8 @@ help_prnt () {
   -c, --cnfdiff - configuration differentiate. Merge old and new configurations.
   -d, --diskcln - disk clean.  rm archives of unused pkg srccode not in tree
   -i, --install - install package
-  -i:[b,d,e]    - install: "$tu"b"$te"inary, "$tu"d"$te"ependency, binary as d"$tu"ependency
-  -i:[g,r,s]    - install: "$tu"g"$te"et-source only, "$tu"r"$te"esume, resume and "$tu"skip-first
+  -i:[b,d,e]    - install: "$tu"b"$te"inary, "$tu"d"$te"ependency, binary as d"$tu"e"$te"pendency
+  -i:[g,r,s]    - install: "$tu"g"$te"et-source only, "$tu"r"$te"esume, resume and "$tu"s"$te"kip-first
   -i:[u,t,v]    - install: "$tu"u"$te"pgrade, "$tu"t"$te"otal-upgrade (w/ builddeps), re"$tu"v"$te"dep-rebld
   -e:[a,b,l]    - edit/view: m"$tu"a"$te"ke.conf, e"$tu"b"$te"uild, e"$tu"l"$te"og
   -e:[k,m,n,s]  - edit/view: package.[accept_"$tu"k"$te"eywords,"$tu"m"$te"ask,u"$tu"n"$te"mask,u"$tu"s"$te"e]
@@ -117,7 +117,7 @@ case $1 in
   -I:t | --Insttot )
     sudo emerge --update --newuse --deep --with-bdeps=y --keep-going @world ;;
   -i:v | --instrev )
-    sudo revdep-rebuild
+    sudo revdep-rebuild ;;
   -e:a | --editmak )
     sudo $EDITOR /etc/portage/make.conf ;;
   -e:b | --editbld )
@@ -174,5 +174,6 @@ case $1 in
     shift; param_tst && eix "$@" ;;
   -y   | --sync    )
     sudo eix-sync ;;
+  *                )
+    help_prnt     ;;
 esac
-
