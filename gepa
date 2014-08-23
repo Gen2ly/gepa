@@ -2,12 +2,12 @@
 # (ge)ntoo (pa)ckages - A generic, package tasks script for Gentoo Linux
 
 # Required programs
-#req_prgs=(emerge euse sudo)
-#for prog in ${req_prgs[@]}; do
-#  if ! hash "$prog" 2>&- ; then
-#    echo >&2 ""${0##*/}": requires program: "$prog""
-#    error=y ;fi ; done
-#[ "$error" = y ] && exit 1
+req_prgs=(emerge euse sudo)
+for prog in ${req_prgs[@]}; do
+  if ! hash "$prog" 2>&- ; then
+    echo >&2 ""${0##*/}": requires program: "$prog""
+    error=y ;fi ; done
+[ "$error" = y ] && exit 1
 
 # Underlining
 tu=$(tput sgr 0 1) # underline
