@@ -1,6 +1,6 @@
 ### Description
 
-A generic wrapper script for common Gentoo Linux package tasks.
+`gepa` is a wrapper script encompassing many common package manager-related tasks - the purpose intended is to help the user remember how to implement those tasks.
 
 ### Usage
 
